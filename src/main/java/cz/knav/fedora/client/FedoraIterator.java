@@ -10,6 +10,8 @@ import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -35,8 +37,7 @@ import com.yourmediashelf.fedora.client.response.RiSearchResponse;
 
 import cz.incad.kramerius.processes.annotations.DefaultParameterValue;
 import cz.incad.kramerius.processes.annotations.ParameterName;
-import cz.incad.kramerius.processes.annotations.Process;   
-
+import cz.incad.kramerius.processes.annotations.Process;
 import cz.incad.kramerius.processes.impl.ProcessStarter;
 import cz.incad.kramerius.service.impl.PolicyServiceImpl;
 import cz.incad.kramerius.utils.conf.KConfiguration;
@@ -55,9 +56,12 @@ public final class FedoraIterator {
     private static int yearsIssued = 50;
 
     private boolean isUpdate;
+    private Date modifiedBefore;
     private String outputDirPath;
     private String persistentUrlBeginning;
 
+    private static final String DSID = "BIBLIO_MODS";
+    
     private boolean links = false; //probably will not use this
     
     private PrintStream outputYes = null;
@@ -100,7 +104,7 @@ public final class FedoraIterator {
     */
     /*
     public static void main(String[] args) throws Exception {
-        process(args[0], args[1]);
+        process(args[0], args[1], args[2]);
     }
     */
 
@@ -115,18 +119,24 @@ public final class FedoraIterator {
     /*
     @DefaultParameterValue("update")
     public static String DEFAULT_UPDATE = "updatefalse";
+    @DefaultParameterValue("modifiedbefore")
+    public static String DEFAULT_MODIFIEDBEFORE = "3333-03-25 23:59:02.222";
     @DefaultParameterValue("output")
     public static String DEFAULT_OUTPUT = "c:/FedoraIteratorOutput/";
     @Process    
-    public static void process(@ParameterName("update")String update, 
+    public static void process(@ParameterName("update")String update,
+            @ParameterName("modifiedbefore")String modifiedbefore, 
             @ParameterName("output")String output) throws Exception {
     */
     @DefaultParameterValue("isUpdate")
     public static final String DEFAULT_IS_UPDATE = UPDATEFALSE;
+    @DefaultParameterValue("modifiedBefore")
+    public static String DEFAULT_MODIFIED_BEFORE = "3333-03-25 23:59:02.222";
     @DefaultParameterValue("outputDirPath")
     public static final String DEFAULT_OUTPUT_DIR_PATH = "c:/FedoraIteratorOutput/";
     @Process    
     public static void process(@ParameterName("isUpdate")String isUpdate, 
+            @ParameterName("modifiedBefore")String modifiedBefore, 
             @ParameterName("outputDirPath")String outputDirPath) throws Exception {
         LOGGER.info("FedoraIterator started.");
         LOGGER.info("isUpdate: " + isUpdate);
@@ -156,14 +166,16 @@ public final class FedoraIterator {
                     "Invalid or missing parameter " + 
                      UPDATEFALSE + "/" + UPDATETRUE + ".");
         }
-
-        outputDirPath = args[1] + System.currentTimeMillis() + "/";
+        
+        modifiedBefore = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")).parse(args[1]);
+        outputDirPath = args[2] + System.currentTimeMillis() + "/";
         LOGGER.info("isUpdate: " + args[0]);
+        LOGGER.info("modifiedBefore: " + args[1]);
         LOGGER.info("outputDirPath: " + outputDirPath);
         (new File(outputDirPath)).mkdirs();
         
         if (links) {
-            persistentUrlBeginning = args[2];
+            persistentUrlBeginning = args[3];
         }
         
         String s = "Begin " + getTime();
@@ -174,7 +186,7 @@ public final class FedoraIterator {
         try {
             /*
             FedoraCredentials credentials = new FedoraCredentials(
-                    new URL(args[3]), args[4], args[5]);
+                    new URL(args[4]), args[5], args[6]);
                     */
             FedoraCredentials credentials = new FedoraCredentials(
                     new URL(configuration.getFedoraHost()), 
@@ -379,7 +391,7 @@ public final class FedoraIterator {
                         log(getMessageCounts(false), false, true, null);
                         log("------------------------------------------------------------c", false, true, null);
                     }
-                    String ds = getDatastream("BIBLIO_MODS");
+                    String ds = getDatastream(DSID);
                     if (ds != null) {
                         executeMods(ds);
                     }
@@ -407,7 +419,7 @@ public final class FedoraIterator {
                         log(getMessageCounts(false), false, true, null);
                         log("------------------------------------------------------------c", false, true, null);
                     }
-                    String ds = getDatastream("BIBLIO_MODS");
+                    String ds = getDatastream(DSID);
                     if (ds != null) {
                         executeMods(ds);
                     }
@@ -627,6 +639,7 @@ public final class FedoraIterator {
             boolean yes = false;
             doc = buildDocument(dsContent);
 
+            //aaaaaaaaaaaaaas ignore nlNamePartDate dateIssued70a110 param50,70,110
             yes = areDatesInNamePartsOk(); 
             //ignore = false; //was used for testing
             if (!ignore) {
@@ -638,6 +651,12 @@ public final class FedoraIterator {
             //yes = true && !ignore; //was used for testing
             if (yes) {
                 yes = isPolicyPrivate();
+                if (yes) {
+                    if (fedora.getLastModifiedDate(pid, DSID).getTime() >= modifiedBefore.getTime()) {
+                        ignore = true;
+                        yes = false;
+                    }
+                }
             }
 
             logYesNo(pid, yes);
