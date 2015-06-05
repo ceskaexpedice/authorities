@@ -652,7 +652,7 @@ public final class FedoraIterator {
             if (yes) {
                 yes = isPolicyPrivate();
                 if (yes) {
-                    if (fedora.getLastModifiedDate(pid, DSID).getTime() >= modifiedBefore.getTime()) {
+                    if (fedora.getLastModifiedDate(pid).getTime() >= modifiedBefore.getTime()) {
                         ignore = true;
                         yes = false;
                     }
