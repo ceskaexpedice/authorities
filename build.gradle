@@ -1,0 +1,12 @@
+apply plugin: 'java'
+
+repositories {
+	mavenLocal()
+	mavenCentral()
+}
+
+dependencies {
+	compile 'cz.incad.kramerius:common:5.1.1-SNAPSHOT'
+	compile 'com.yourmediashelf.fedora.client:fedora-client-core:0.7'
+	compile 'com.google.inject:guice:3.0'
+}
