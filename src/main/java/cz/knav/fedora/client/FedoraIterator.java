@@ -182,9 +182,11 @@ public final class FedoraIterator {
         yearsIssued = Integer.valueOf(args[4]).intValue();
         (new File(outputDirPath)).mkdirs();
         
+        /*
         if (links) {
-            persistentUrlBeginning = args[3];
+            persistentUrlBeginning = args[...];
         }
+        */
         
         String s = "Begin " + getTime();
         System.out.println(s);
