@@ -102,11 +102,11 @@ public final class FedoraIterator {
         </templates>        
     </process>
     */
-    /*
+    ///*
     public static void main(String[] args) throws Exception {
-        process(args[0], args[1], args[2]);
+        process(args[0], args[1], args[2], args[3], args[4]);
     }
-    */
+    //*/
 
     /*
     @DefaultParameterValue("name")
@@ -134,22 +134,31 @@ public final class FedoraIterator {
     public static String DEFAULT_MODIFIED_BEFORE = "3333-03-25 23:59:02.222";
     @DefaultParameterValue("outputDirPath")
     public static final String DEFAULT_OUTPUT_DIR_PATH = "c:/FedoraIteratorOutput/";
+    @DefaultParameterValue("yearsAuthor")
+    public static final String DEFAULT_YEARS_AUTHOR = "70";
+    @DefaultParameterValue("yearsIssued")
+    public static final String DEFAULT_YEARS_ISSUED = "50";
     @Process    
     public static void process(@ParameterName("isUpdate")String isUpdate, 
             @ParameterName("modifiedBefore")String modifiedBefore, 
-            @ParameterName("outputDirPath")String outputDirPath) throws Exception {
+            @ParameterName("outputDirPath")String outputDirPath,
+            @ParameterName("yearsAuthor")String yearsAuthor,
+            @ParameterName("yearsIssued")String yearsIssued) throws Exception {
         LOGGER.info("FedoraIterator started.");
         LOGGER.info("isUpdate: " + isUpdate);
+        LOGGER.info("modifiedBefore: " + modifiedBefore);
         LOGGER.info("outputDirPath: " + outputDirPath);
+        LOGGER.info("yearsAuthor: " + yearsAuthor);
+        LOGGER.info("yearsIssued: " + yearsIssued);
         ProcessStarter.updateName("FedoraIterator started."); //aaaaaaaaaaaaaaaaaaas
         FedoraIterator inst = new FedoraIterator();
         inst.configuration = KConfiguration.getInstance();
-        String[] args = { isUpdate, outputDirPath }; 
+        String[] args = { isUpdate, modifiedBefore, outputDirPath, yearsAuthor, yearsIssued }; 
         inst.execute(args);
         ProcessStarter.updateName("FedoraIterator finished."); //aaaaaaaaaaaaaaaaaaas 
         LOGGER.info("FedoraIterator finished.");
     }
-
+    
     /*
     <info:fedora/uuid:0f33a3e0-2edd-11e0-8e8b-001c259520c6> 
     <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:periodical> .    
@@ -169,9 +178,8 @@ public final class FedoraIterator {
         
         modifiedBefore = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")).parse(args[1]);
         outputDirPath = args[2] + System.currentTimeMillis() + "/";
-        LOGGER.info("isUpdate: " + args[0]);
-        LOGGER.info("modifiedBefore: " + args[1]);
-        LOGGER.info("outputDirPath: " + outputDirPath);
+        yearsAuthor = Integer.valueOf(args[3]).intValue();
+        yearsIssued = Integer.valueOf(args[4]).intValue();
         (new File(outputDirPath)).mkdirs();
         
         if (links) {
