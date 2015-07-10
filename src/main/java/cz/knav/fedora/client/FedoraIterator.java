@@ -128,17 +128,19 @@ public final class FedoraIterator {
             @ParameterName("modifiedbefore")String modifiedbefore, 
             @ParameterName("output")String output) throws Exception {
     */
+    /*
     @DefaultParameterValue("isUpdate")
     public static final String DEFAULT_IS_UPDATE = UPDATEFALSE;
     @DefaultParameterValue("modifiedBefore")
-    public static String DEFAULT_MODIFIED_BEFORE = "3333-03-25 23:59:02.222";
+    public static String DEFAULT_MODIFIED_BEFORE = "3333-03-25-23:59:02.222";
     @DefaultParameterValue("outputDirPath")
     public static final String DEFAULT_OUTPUT_DIR_PATH = "c:/FedoraIteratorOutput/";
     @DefaultParameterValue("yearsAuthor")
     public static final String DEFAULT_YEARS_AUTHOR = "70";
     @DefaultParameterValue("yearsIssued")
     public static final String DEFAULT_YEARS_ISSUED = "50";
-    @Process    
+    @Process
+    */   
     public static void process(@ParameterName("isUpdate")String isUpdate, 
             @ParameterName("modifiedBefore")String modifiedBefore, 
             @ParameterName("outputDirPath")String outputDirPath,
@@ -176,7 +178,7 @@ public final class FedoraIterator {
                      UPDATEFALSE + "/" + UPDATETRUE + ".");
         }
         
-        modifiedBefore = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS")).parse(args[1]);
+        modifiedBefore = (new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS")).parse(args[1]);
         outputDirPath = args[2] + System.currentTimeMillis() + "/";
         yearsAuthor = Integer.valueOf(args[3]).intValue();
         yearsIssued = Integer.valueOf(args[4]).intValue();
@@ -240,6 +242,8 @@ public final class FedoraIterator {
                 "track",
                 "graphic",
               }; 
+        //models = configuration.getPropertyList("fedora.modelsWithYearsAuthors"); //TODO aaaaaaaaaaaas
+        
         for (int i = 0; i < models.length; i++) {
             model = models[i];
             RiSearchResponse response = null;
