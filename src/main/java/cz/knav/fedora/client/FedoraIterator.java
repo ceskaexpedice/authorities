@@ -685,9 +685,13 @@ public final class FedoraIterator {
             //was used for testing: if (yes || pid.equals("uuid:85560f80-355c-11e3-8d9d-005056827e51") || pid.equals("uuid:3e1564a0-2ce1-11e3-a5bb-005056827e52")) {
             if (yes) {
                 objectsCountSelected++;
+				/* 
+				aaaaaaaaaaaaaaaaaaaaaaaaaaaas
+				TODO: Uncomment this after everything (programming, testing,...) will be finished.
                 if (isUpdate) {
                     setPolicyPublic();
                 }
+				*/
             }
         } catch (Exception e) {
             writeError(e);
