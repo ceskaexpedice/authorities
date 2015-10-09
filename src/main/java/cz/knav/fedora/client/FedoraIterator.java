@@ -82,7 +82,7 @@ public final class FedoraIterator {
     private Document doc;
     private XPath xpath;
     private String pid;
-    private String dateIssued;
+    private NodeList dateIssuedNL;
     private boolean ignore;
     private boolean areDatesAlmostStandard;
     
@@ -152,12 +152,12 @@ public final class FedoraIterator {
         LOGGER.info("outputDirPath: " + outputDirPath);
         LOGGER.info("yearsAuthor: " + yearsAuthor);
         LOGGER.info("yearsIssued: " + yearsIssued);
-        ProcessStarter.updateName("FedoraIterator started."); //aaaaaaaaaaaaaaaaaaas
+        //ProcessStarter.updateName("FedoraIterator started."); //aaaaaaaaaaaaaaaaaaas
         FedoraIterator inst = new FedoraIterator();
         inst.configuration = KConfiguration.getInstance();
         String[] args = { isUpdate, modifiedBefore, outputDirPath, yearsAuthor, yearsIssued }; 
         inst.execute(args);
-        ProcessStarter.updateName("FedoraIterator finished."); //aaaaaaaaaaaaaaaaaaas 
+        //ProcessStarter.updateName("FedoraIterator finished."); //aaaaaaaaaaaaaaaaaaas 
         LOGGER.info("FedoraIterator finished.");
     }
     
@@ -183,6 +183,7 @@ public final class FedoraIterator {
         yearsAuthor = Integer.valueOf(args[3]).intValue();
         yearsIssued = Integer.valueOf(args[4]).intValue();
         (new File(outputDirPath)).mkdirs();
+        DateEvaluator.init(args[2], yearsAuthor, yearsIssued);
         
         /*
         if (links) {
@@ -240,9 +241,9 @@ public final class FedoraIterator {
                 "soundrecording",
                 "soundunit",
                 "track",
-                "graphic",
+                "graphic"
               }; 
-        //models = configuration.getPropertyList("fedora.modelsWithYearsAuthors"); //TODO aaaaaaaaaaaas
+        models = configuration.getPropertyList("fedora.modelsWithYearsAuthors"); //TODO aaaaaaaaaaaas
         
         for (int i = 0; i < models.length; i++) {
             model = models[i];
@@ -596,7 +597,7 @@ public final class FedoraIterator {
                <mods:date>1941</mods:date>
             </mods:part>        
         - dateIssued
-            - je v modsu jen na jednom místě
+            - není pravda: je v modsu jen na jednom místě
             - neměl by se opakovat
             - pravidla:
               ----------------
@@ -653,7 +654,6 @@ public final class FedoraIterator {
             boolean yes = false;
             doc = buildDocument(dsContent);
 
-            //aaaaaaaaaaaaaas ignore nlNamePartDate dateIssued70a110 param50,70,110
             yes = areDatesInNamePartsOk(); 
             //ignore = false; //was used for testing
             if (!ignore) {
@@ -677,7 +677,7 @@ public final class FedoraIterator {
             logYesNo("model: " + model, yes);
             logYesNo("title: " + getTitleInfo("title"), yes);
             logYesNo("subTitle: " + getTitleInfo("subTitle"), yes);
-            logYesNo("date issued: " + dateIssued, yes);
+            logDatesIssued(yes);
             logNameParts(yes);
             logPid(pid);
             logYesNo("------------------------------------------------------------r",yes);
@@ -772,55 +772,58 @@ public final class FedoraIterator {
             "*[local-name() = '" + childName + "' and namespace-uri() = namespace-uri(/*)]");
     }
     
-    private String getDateIssued(String elementName, String childName) throws Exception {
-        String r = null;
-        Element dateIssuedNode = (Element) getExprDateIssued(elementName, childName).evaluate(
-                doc, XPathConstants.NODE);
-        if (dateIssuedNode != null) {
-            String s = "qualifier";
-            if (dateIssuedNode.hasAttribute(s)) {
-                writeWarning("date issued - " + s + ": " + dateIssuedNode.getAttribute(s));
-            }
-            r = dateIssuedNode.getTextContent();
-        }
-        return r;
-    }
-    
     private boolean isDateIssuedOk() throws Exception {
-        boolean r;
+        boolean r = true;
         boolean searchDateInPart = false;
-        
         try {
-            dateIssued = getDateIssued("originInfo", "dateIssued");
-        } catch (Exception e) {
-            writeError(e);
-            searchDateInPart = true;
-        }
-
-        if (dateIssued == null || dateIssued.isEmpty()) {
-            searchDateInPart = true;
-        }
-               
-        if (searchDateInPart) {
+            dateIssuedNL = null;
             try {
-                dateIssued = getDateIssued("part", "date");
-                r = DateIssuedEvaluator.isDateIssuedOk(dateIssued, yearsIssued);
-                if (r == true) {
-                    setAreDatesAlmostStandard(DateAuthorEvaluator.isDateAlmostStandard(dateIssued, false));
-                }
+                dateIssuedNL = (NodeList) getExprDateIssued("originInfo", "dateIssued").evaluate(
+                        doc, XPathConstants.NODESET);
             } catch (Exception e) {
                 writeError(e);
+                searchDateInPart = true;
+            }
+
+            if (dateIssuedNL == null || dateIssuedNL.getLength() == 0) {
+                searchDateInPart = true;
+            }
+                   
+            if (searchDateInPart) {
+                try {
+                    dateIssuedNL = (NodeList) getExprDateIssued("part", "date").evaluate(
+                            doc, XPathConstants.NODESET);
+                } catch (Exception e) {
+                    writeError(e);
+                    r = false;
+                }
+            }
+            
+            if (dateIssuedNL != null && dateIssuedNL.getLength() > 0) {
+                int i = 0;
+                while ((r == true) &&  (i < dateIssuedNL.getLength())) {
+                    Element element = (Element) dateIssuedNL.item(i);
+                    switch (DateEvaluator.evaluate(false, element).getResult()) {
+                    case DateResult.YES:
+                        setAreDatesAlmostStandard(true);
+                        break;
+                    case DateResult.YES_NONSTANDARD:
+                        setAreDatesAlmostStandard(false);
+                        break;
+                    case DateResult.NO:
+                        r = false;
+                        writeWarning("date issued: " + element.getTextContent());
+                        break;
+                    }
+                    i++;
+                }
+            } else {
                 r = false;
             }
-        } else {
-            r = DateIssuedEvaluator.isDateIssuedOk(dateIssued, yearsIssued);
-            if (r == true) {
-                setAreDatesAlmostStandard(DateAuthorEvaluator.isDateAlmostStandard(dateIssued, false));
-            }
-        }
-        
-        if (r == false) {
-            writeWarning("date issued: " + dateIssued);
+            
+        } catch (Exception e) {
+            writeError(e);
+            r = false;
         }
         return r;
     }
@@ -859,12 +862,18 @@ public final class FedoraIterator {
                 while ((r == true) &&  (i2 < nlNamePartDate.getLength())) {
                     ignore = false;
                     //System.out.println(nlNamePartDate.item(i2).getTextContent());
-                    String dateAuthor = nlNamePartDate.item(i2).getTextContent();
-                    if (DateAuthorEvaluator.isDateAuthorOk(dateAuthor, yearsAuthor)) {
-                        setAreDatesAlmostStandard(DateAuthorEvaluator.isDateAlmostStandard(dateAuthor, true));
-                    } else {
+                    Element element = (Element) nlNamePartDate.item(i2);
+                    switch (DateEvaluator.evaluate(true, element).getResult()) {
+                    case DateResult.YES:
+                        setAreDatesAlmostStandard(true);
+                        break;
+                    case DateResult.YES_NONSTANDARD:
+                        setAreDatesAlmostStandard(false);
+                        break;
+                    case DateResult.NO:
                         r = false;
-                        writeWarning("namePart/date: " + dateAuthor);
+                        writeWarning("namePart/date: " + element.getTextContent());
+                        break;
                     }
                     i2++;
                 }
@@ -894,6 +903,15 @@ public final class FedoraIterator {
             "*[local-name() = 'mods' and namespace-uri() = namespace-uri(/*)]/" +
             "*[local-name() = 'name' and namespace-uri() = namespace-uri(/*)]/" +
             "*[local-name() = 'namePart' and namespace-uri() = namespace-uri(/*)]");
+    }
+    
+    private void logDatesIssued(boolean yes) throws Exception {
+        for (int i = 0; i < dateIssuedNL.getLength(); i++) {
+            Element element = (Element) dateIssuedNL.item(i);
+            String s = DateResult.getAttrQualifierApproximate(element) 
+                    + "date issued" + ":-----:     " + element.getTextContent(); 
+            logYesNo(s, yes);
+        }
     }
     
     private void logNameParts(boolean yes) throws Exception {
