@@ -140,7 +140,7 @@ public final class FedoraIterator {
     @DefaultParameterValue("yearsIssued")
     public static final String DEFAULT_YEARS_ISSUED = "50";
     @Process
-    */   
+    */
     public static void process(@ParameterName("isUpdate")String isUpdate, 
             @ParameterName("modifiedBefore")String modifiedBefore, 
             @ParameterName("outputDirPath")String outputDirPath,
@@ -149,15 +149,16 @@ public final class FedoraIterator {
         LOGGER.info("FedoraIterator started.");
         LOGGER.info("isUpdate: " + isUpdate);
         LOGGER.info("modifiedBefore: " + modifiedBefore);
+        //LOGGER.info("patternsDirPath: " + patternsDirPath); //aaaaaaaaaaaaaaaaaaaaas
         LOGGER.info("outputDirPath: " + outputDirPath);
         LOGGER.info("yearsAuthor: " + yearsAuthor);
         LOGGER.info("yearsIssued: " + yearsIssued);
-        //ProcessStarter.updateName("FedoraIterator started."); //aaaaaaaaaaaaaaaaaaas
+        ProcessStarter.updateName("FedoraIterator started."); //aaaaaaaaaaaaaaaaaaas
         FedoraIterator inst = new FedoraIterator();
         inst.configuration = KConfiguration.getInstance();
         String[] args = { isUpdate, modifiedBefore, outputDirPath, yearsAuthor, yearsIssued }; 
         inst.execute(args);
-        //ProcessStarter.updateName("FedoraIterator finished."); //aaaaaaaaaaaaaaaaaaas 
+        ProcessStarter.updateName("FedoraIterator finished."); //aaaaaaaaaaaaaaaaaaas 
         LOGGER.info("FedoraIterator finished.");
     }
     

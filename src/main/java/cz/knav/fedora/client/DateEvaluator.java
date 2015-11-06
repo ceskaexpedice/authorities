@@ -29,9 +29,9 @@ public class DateEvaluator {
             yearEvaluationAuthor = new YearEvaluation(yearsAuthor);
             yearEvaluationIssued = new YearEvaluation(yearsIssued);
             patternsDateAuthor = (new PatternParser(yearEvaluationAuthor)).parsePatterns(
-                    dirPath + "PatternsDateAuthor.xml");
+                    dirPath + "VzoryDatumUmrti.xml");
             patternsDateIssued = (new PatternParser(yearEvaluationIssued)).parsePatterns(
-                    dirPath + "PatternsDateIssued.xml");
+                    dirPath + "VzoryRokVydani.xml");
         }
     }
 
