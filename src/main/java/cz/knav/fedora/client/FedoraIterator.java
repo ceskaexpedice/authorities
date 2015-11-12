@@ -16,6 +16,12 @@ import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
@@ -46,8 +52,8 @@ public final class FedoraIterator {
 
     public static final Logger LOGGER = Logger.getLogger(FedoraIterator.class.getName());
 
-    public static final String UPDATEFALSE = "updatefalse";
-    public static final String UPDATETRUE = "updatetrue";
+    public static final String NO = "ne";
+    public static final String YES = "ano";
 
     //private static final int OBJECTS_LIMIT = 100;
     private static final int NOT_FOUND = 404;
@@ -55,9 +61,15 @@ public final class FedoraIterator {
     private static int yearsAuthor = 70;
     private static int yearsIssued = 50;
 
+    private static String CAN_RUN = "SpusteniPovoleno";
+    private static String IS_UPDATE = "Zpristupnovat";
+
+    private String dirPath;
+    private String dirPathOutput;
+    
+    private boolean canRun;
     private boolean isUpdate;
     private Date modifiedBefore;
-    private String outputDirPath;
     private String persistentUrlBeginning;
 
     private static final String DSID = "BIBLIO_MODS";
@@ -92,22 +104,46 @@ public final class FedoraIterator {
     /*
     <process>
         <id>fedoraiterator</id>
-        <description>Fedora iterator</description>
+        <description>Zpøístupòování dìl</description>
         <mainClass>cz.knav.fedora.client.FedoraIterator</mainClass>
         <standardOs>lrOut</standardOs>
         <errOs>lrErr</errOs>
-        <parameters>updatefalse c:/FedoraIteratorOutput/</parameters>
-        <templates>
-            <input class="cz.incad.kramerius.processes.def.DefaultTemplate"></input>
-        </templates>        
+        <parameters>C:/Zpristupnovani/</parameters>
     </process>
     */
     ///*
     public static void main(String[] args) throws Exception {
-        process(args[0], args[1], args[2], args[3], args[4]);
+        process(args[0]/*, args[1], args[2], args[3], args[4]*/);
     }
     //*/
 
+    private static String[] getParams(String dirPathParam) throws Exception {
+        String[] r = new String[5];
+        
+        File fXmlFile = new File(dirPathParam + "Parametry.xml");
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(fXmlFile); 
+        
+        Element spusteniPovoleno = ((Element) doc.getElementsByTagName(CAN_RUN).item(0));
+        r[0] = spusteniPovoleno.getTextContent();
+        r[1] = ((Element) doc.getElementsByTagName(IS_UPDATE).item(0)).getTextContent();
+        r[2] = ((Element) doc.getElementsByTagName("ZmenenePred").item(0)).getTextContent();
+        r[3] = ((Element) doc.getElementsByTagName("LetAutori").item(0)).getTextContent();
+        r[4] = ((Element) doc.getElementsByTagName("LetVydani").item(0)).getTextContent();
+        
+        spusteniPovoleno.setTextContent(NO);
+        
+        TransformerFactory tFactory = TransformerFactory.newInstance();
+        Transformer transformer = tFactory.newTransformer();
+        transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        DOMSource source = new DOMSource(doc);
+        StreamResult result = new StreamResult(fXmlFile);
+        transformer.transform(source, result);
+        
+        return r;
+    }
+    
     /*
     @DefaultParameterValue("name")
     public static String DEFAULT_NAME = "DEFAULT";
@@ -141,24 +177,27 @@ public final class FedoraIterator {
     public static final String DEFAULT_YEARS_ISSUED = "50";
     @Process
     */
-    public static void process(@ParameterName("isUpdate")String isUpdate, 
+    public static void process(String dirPathParam
+            /*
+            @ParameterName("isUpdate")String isUpdate, 
             @ParameterName("modifiedBefore")String modifiedBefore, 
             @ParameterName("outputDirPath")String outputDirPath,
             @ParameterName("yearsAuthor")String yearsAuthor,
-            @ParameterName("yearsIssued")String yearsIssued) throws Exception {
+            @ParameterName("yearsIssued")String yearsIssued
+            */
+            ) throws Exception {
+        String[] p = getParams(dirPathParam);
         LOGGER.info("FedoraIterator started.");
-        LOGGER.info("isUpdate: " + isUpdate);
-        LOGGER.info("modifiedBefore: " + modifiedBefore);
-        //LOGGER.info("patternsDirPath: " + patternsDirPath); //aaaaaaaaaaaaaaaaaaaaas
-        LOGGER.info("outputDirPath: " + outputDirPath);
-        LOGGER.info("yearsAuthor: " + yearsAuthor);
-        LOGGER.info("yearsIssued: " + yearsIssued);
-        ProcessStarter.updateName("FedoraIterator started."); //aaaaaaaaaaaaaaaaaaas
+        LOGGER.info("canRun: " + p[0]);
+        LOGGER.info("isUpdate: " + p[1]);
+        LOGGER.info("modifiedBefore: " + p[2]);
+        LOGGER.info("yearsAuthor: " + p[3]);
+        LOGGER.info("yearsIssued: " + p[4]);
+        ProcessStarter.updateName("Zpøístupòování dìl - bìží");
         FedoraIterator inst = new FedoraIterator();
         inst.configuration = KConfiguration.getInstance();
-        String[] args = { isUpdate, modifiedBefore, outputDirPath, yearsAuthor, yearsIssued }; 
-        inst.execute(args);
-        ProcessStarter.updateName("FedoraIterator finished."); //aaaaaaaaaaaaaaaaaaas 
+        inst.initAndExecute(dirPathParam, p);
+        ProcessStarter.updateName("Zpøístupòování dìl - dokonèeno.");
         LOGGER.info("FedoraIterator finished.");
     }
     
@@ -166,119 +205,146 @@ public final class FedoraIterator {
     <info:fedora/uuid:0f33a3e0-2edd-11e0-8e8b-001c259520c6> 
     <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:periodical> .    
     */
-    private void execute(String[] args) throws Exception {
+    private void initAndExecute(String dirPathParam, String[] params) throws Exception {
+        dirPath = dirPathParam;
+        if (!dirPath.endsWith("/")) {
+            dirPath = dirPath + "/";
+        }
+        dirPathOutput = dirPath + "Vystup/" + System.currentTimeMillis() + "/";
+        (new File(dirPathOutput)).mkdirs();
+
         xpath = XPathFactory.newInstance().newXPath();
         
-        if (args[0].equalsIgnoreCase(UPDATETRUE)) {
+        if (params[0].equalsIgnoreCase(YES)) {
+            canRun = true;
+        } else if (params[0].equalsIgnoreCase(NO)) {
+            canRun = false;
+        } else {
+            throw new IllegalArgumentException(
+                    "Invalid or missing parameter \"" + CAN_RUN + "\" " + 
+                     NO + "/" + YES);
+        }
+        
+        if (params[1].equalsIgnoreCase(YES)) {
             isUpdate = true;
-        } else if (args[0].equalsIgnoreCase(UPDATEFALSE)) {
+        } else if (params[1].equalsIgnoreCase(NO)) {
             isUpdate = false;
         } else {
             throw new IllegalArgumentException(
-                    "Invalid or missing parameter " + 
-                     UPDATEFALSE + "/" + UPDATETRUE + ".");
+                    "Invalid or missing parameter \"" + IS_UPDATE + "\" " + 
+                     NO + "/" + YES);
         }
         
-        modifiedBefore = (new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS")).parse(args[1]);
-        outputDirPath = args[2] + System.currentTimeMillis() + "/";
-        yearsAuthor = Integer.valueOf(args[3]).intValue();
-        yearsIssued = Integer.valueOf(args[4]).intValue();
-        (new File(outputDirPath)).mkdirs();
-        DateEvaluator.init(args[2], yearsAuthor, yearsIssued);
+        modifiedBefore = (new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss.SSS")).parse(params[2]);
+        
+        yearsAuthor = Integer.valueOf(params[3]).intValue();
+        yearsIssued = Integer.valueOf(params[4]).intValue();
+        DateEvaluator.init(dirPath, yearsAuthor, yearsIssued);
+        execute();
         
         /*
         if (links) {
             persistentUrlBeginning = args[...];
         }
         */
-        
+    }
+
+    private void execute() throws Exception {
         String s = "Begin " + getTime();
         System.out.println(s);
         log(s);
-        log("------------------------------------------------------------b");
         
-        try {
-            /*
-            FedoraCredentials credentials = new FedoraCredentials(
-                    new URL(args[4]), args[5], args[6]);
-                    */
-            FedoraCredentials credentials = new FedoraCredentials(
-                    new URL(configuration.getFedoraHost()), 
-                    configuration.getFedoraUser(), configuration.getFedoraPass());
-            fedora = new FedoraClient(credentials);
-            fedora.debug(false);
-            FedoraRequest.setDefaultClient(fedora);  
-        } catch (MalformedURLException e) {
-            throwRuntimeException(e);
-        }
+        if (!canRun) {
+            log("--------------------------------------------");
+            log("Parameter \"" + CAN_RUN + "\": " + NO);
+            log("--------------------------------------------");
+        } else {
+            log("------------------------------------------------------------b");
+            try {
+                /*
+                FedoraCredentials credentials = new FedoraCredentials(
+                        new URL(args[4]), args[5], args[6]);
+                        */
+                FedoraCredentials credentials = new FedoraCredentials(
+                        new URL(configuration.getFedoraHost()), 
+                        configuration.getFedoraUser(), configuration.getFedoraPass());
+                fedora = new FedoraClient(credentials);
+                fedora.debug(false);
+                FedoraRequest.setDefaultClient(fedora);  
+            } catch (MalformedURLException e) {
+                throwRuntimeException(e);
+            }
 
-        /*
-        FindObjectsResponse response = FedoraClient.findObjects().terms("*").pid()
-                .maxResults(OBJECTS_LIMIT)
-                .execute(fedora);
-        executeResponse(response);
-        token = response.getToken();
-        while (token != null) {
-            response = FedoraClient.findObjects()
-                    .sessionToken(token)
+            /*
+            FindObjectsResponse response = FedoraClient.findObjects().terms("*").pid()
+                    .maxResults(OBJECTS_LIMIT)
                     .execute(fedora);
             executeResponse(response);
             token = response.getToken();
-        }
-        */
-        String[] models = { //TODO aaaaaaaaaaaaaaaas jeste asi vylepsit poradi
-                "repository",
-                "monograph",
-                "monographunit",
-                "periodical",
-                "periodicalvolume",
-                "periodicalitem",
-                "article",
-                "manuscript",
-                "map",
-                "internalpart",
-                "sheetmusic",
-                "supplement",
-                "soundrecording",
-                "soundunit",
-                "track",
-                "graphic"
-              }; 
-        models = configuration.getPropertyList("fedora.modelsWithYearsAuthors"); //TODO aaaaaaaaaaaas
-        
-        for (int i = 0; i < models.length; i++) {
-            model = models[i];
-            RiSearchResponse response = null;
-            try {
-                String q = " *  <info:fedora/fedora-system:def/model#hasModel>   <info:fedora/model:"
-                        + model + ">"; 
-                LOGGER.info("query: " + q);
-                response = FedoraClient.riSearch(q).lang("spo")
-                        .type("triples").flush(true).execute();
-                if (response.getStatus() != 200) {
-                    writeError("response.getStatus() != 200 " + "query: " + q);
-                } else {
-                    executeResponse(response);
-                }
-            } catch (FedoraClientException e) {
-                 writeError(e);
+            while (token != null) {
+                response = FedoraClient.findObjects()
+                        .sessionToken(token)
+                        .execute(fedora);
+                executeResponse(response);
+                token = response.getToken();
             }
+            */
+            
+            /*
+            String[] models = { 
+                    "repository",
+                    "monograph",
+                    "monographunit",
+                    "periodical",
+                    "periodicalvolume",
+                    "periodicalitem",
+                    "article",
+                    "manuscript",
+                    "map",
+                    "internalpart",
+                    "sheetmusic",
+                    "supplement",
+                    "soundrecording",
+                    "soundunit",
+                    "track",
+                    "graphic"
+                  };
+                  */
+            String[] models = configuration.getPropertyList("fedora.modelsWithYearsAuthors");
+            
+            for (int i = 0; i < models.length; i++) {
+                model = models[i];
+                RiSearchResponse response = null;
+                try {
+                    String q = " *  <info:fedora/fedora-system:def/model#hasModel>   <info:fedora/model:"
+                            + model + ">"; 
+                    LOGGER.info("query: " + q);
+                    response = FedoraClient.riSearch(q).lang("spo")
+                            .type("triples").flush(true).execute();
+                    if (response.getStatus() != 200) {
+                        writeError("response.getStatus() != 200 " + "query: " + q);
+                    } else {
+                        executeResponse(response);
+                    }
+                } catch (FedoraClientException e) {
+                     writeError(e);
+                }
+            }
+            
+            /* in result were duplicates:
+            <info:fedora/uuid:85560f80-355c-11e3-8d9d-005056827e51> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
+            <info:fedora/uuid:3e1564a0-2ce1-11e3-a5bb-005056827e52> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
+            <info:fedora/uuid:9c940885-d0c4-11e1-8140-005056a60003> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
+            <info:fedora/uuid:85560f80-355c-11e3-8d9d-005056827e51> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
+            <info:fedora/uuid:3e1564a0-2ce1-11e3-a5bb-005056827e52> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
+             */
         }
-        
-        /* in result were duplicates:
-        <info:fedora/uuid:85560f80-355c-11e3-8d9d-005056827e51> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
-        <info:fedora/uuid:3e1564a0-2ce1-11e3-a5bb-005056827e52> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
-        <info:fedora/uuid:9c940885-d0c4-11e1-8140-005056a60003> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
-        <info:fedora/uuid:85560f80-355c-11e3-8d9d-005056827e51> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
-        <info:fedora/uuid:3e1564a0-2ce1-11e3-a5bb-005056827e52> <info:fedora/fedora-system:def/model#hasModel> <info:fedora/model:monograph> .
-         */
         
         /* was tested:
         for (int i = 0; i < 400000; i++) {
             log(lineNumber + " aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas");
         }
         */
-        
         log(getMessageCounts(true));
         System.out.println(getMessageCounts(true));
         
@@ -308,7 +374,7 @@ public final class FedoraIterator {
     }
     
     private PrintStream getStreamForOutput(String fileName) throws FileNotFoundException {
-        return new PrintStream(new FileOutputStream(outputDirPath + fileName));
+        return new PrintStream(new FileOutputStream(dirPathOutput + fileName));
     }
     
     private void setNewOutputs() {
