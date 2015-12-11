@@ -129,7 +129,7 @@ Příklad souboru VzoryDatumUmrti.xml:
     <PrevodNaRok>RR*100+150</PrevodNaRok>
     </VzorDefinice>
     <VzorDefinice>
-    <IAtributApproximate>N</IAtributApproximate>
+    <IAtributApproximate>ne</IAtributApproximate>
     <Cislice>C</Cislice>
     <CisliceProVypocet>R</CisliceProVypocet>
     <Vzor>asi CC. - RR. stol.</Vzor>
@@ -149,7 +149,7 @@ Příklad souboru VzoryRokVydani.xml:
     <PrevodNaRok>RR*100+150</PrevodNaRok>
     </VzorDefinice>
     <VzorDefinice>
-    <IAtributApproximate>N</IAtributApproximate>
+    <IAtributApproximate>ne</IAtributApproximate>
     <Cislice>C</Cislice>
     <CisliceProVypocet>R</CisliceProVypocet>
     <Vzor>asi CC. - RR. stol.</Vzor>
