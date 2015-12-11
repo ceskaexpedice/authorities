@@ -755,8 +755,7 @@ public final class FedoraIterator {
             if (yes) {
                 objectsCountSelected++;
 				/* 
-				aaaaaaaaaaaaaaaaaaaaaaaaaaaas
-				TODO: Uncomment this after everything (programming, testing,...) will be finished.
+				TODO: Uncomment this after testing will be finished.
                 if (isUpdate) {
                     setPolicyPublic();
                 }

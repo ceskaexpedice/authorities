@@ -2,6 +2,16 @@
 
 Proces posuzuje roky úmrtí autorů a roky vydání a na základě toho rozhoduje o možnosti zpřístupnění. Do jeho konfiguračních souborů je možno zadat vzory (např. "cca CC. - RR. stol.") a způsoby vyhodnocení (např. "RR*100+150") pro všelijaké velmi nestandardní tvary zadání roků úmrtí autorů a roků vydání (např. "cca 17. - 18. stol."). Proces je možno spustit s parametrem, aby nic ve Fedoře neměnil a pouze vytvořil výstupní soubory s informacemi, jak co vyhodnotil.
 
+Po dokončení testování pouze s výstupními soubory:
+Aby proces kromě vytváření výstupních souborů i rovnou zpřístupňoval, co je možno zpřístupnit, je potřeba v souboru FedoraIterator.java odkomentovat toto:
+
+				/* 
+				TODO: Uncomment this after testing will be finished.
+                if (isUpdate) {
+                    setPolicyPublic();
+                }
+				*/
+
 ##Začlenění tohoto procesu do Krameria je možno provést např. takto:
 
 1) Po případném zbuildování Krameria (viz níže) a jeho umístění na server "Apache Tomcat" dát ".jar" soubor tohoto procesu do adresáře Krameria "search\WEB-INF\lib".
@@ -89,9 +99,9 @@ V souborech VzoryDatumUmrti.xml a VzoryRokVydani.xml je seznam elementů VzorDef
 
 V elementu IAtributApproximate se uvádí hodnota "ano" nebo "ne", zda je možno daný vzor používat i na data, která se nacházejí v XML elementu s atributem "qualifier", jehož hodnota je "approximate" - tzn., že se jedná pouze o přibližný údaj.
 
-V elementu "Cislice" se uvádí znak (např. C), který ve vzoru zastupuje libovolnou číslici.
+V elementu "Cislice" se uvádí znak (např. C), který v níže uvedeném elementu "Vzor" zastupuje libovolnou číslici.
 
-V elementu CisliceProVypocet (např. R) se uvádí znak, který ve vzoru zastupuje číslici, která se používá ve výrazu v níže uvedeném elementu "Vzor" pro výpočet roku, který se má posoudit. Stejný znak se používá i v uvedeném výrazu v níže uvedeném elementu "Vzor". Např. dvojciferné číslo je tedy reprezentováno dvěma těmito znaky (tedy např. RR).
+V elementu CisliceProVypocet (např. R) se uvádí znak, který v níže uvedeném elementu "Vzor" zastupuje číslici, která se používá ve výrazu v níže uvedeném elementu PrevodNaRok pro výpočet roku, který se má posoudit. Stejný znak se používá i v uvedeném výrazu v elementu "PrevodNaRok". Např. dvojciferné číslo je tedy reprezentováno dvěma těmito znaky (tedy např. RR).
 
 V elementu "Vzor" se uvádí vzor, v jakém tvaru mohou být data.
 
@@ -112,7 +122,7 @@ Příklad souboru VzoryDatumUmrti.xml:
     <?xml version="1.0" encoding="UTF-8"?>
     <Vzory>
     <VzorDefinice>
-    <IAtributApproximate>N</IAtributApproximate>
+    <IAtributApproximate>ne</IAtributApproximate>
     <Cislice>C</Cislice>
     <CisliceProVypocet>R</CisliceProVypocet>
     <Vzor>cca CC. - RR. stol.</Vzor>
@@ -132,7 +142,7 @@ Příklad souboru VzoryRokVydani.xml:
     <?xml version="1.0" encoding="UTF-8"?>
     <Vzory>
     <VzorDefinice>
-    <IAtributApproximate>N</IAtributApproximate>
+    <IAtributApproximate>ne</IAtributApproximate>
     <Cislice>C</Cislice>
     <CisliceProVypocet>R</CisliceProVypocet>
     <Vzor>cca CC. - RR. stol.</Vzor>
