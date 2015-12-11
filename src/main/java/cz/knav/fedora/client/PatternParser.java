@@ -31,7 +31,7 @@ public class PatternParser {
             boolean iAttrApprox;
             String iAttrApproxStr = node.getElementsByTagName(
                     "IAtributApproximate").item(0).getTextContent();
-            if (iAttrApproxStr.equalsIgnoreCase("A")) {
+            if (iAttrApproxStr.equalsIgnoreCase("ano")) {
                 iAttrApprox = true;
             } else {
                 iAttrApprox = false;

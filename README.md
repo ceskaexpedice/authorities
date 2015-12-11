@@ -37,14 +37,14 @@ Nebo v případě buildování Krameria si to upravit v Krameriovi před buildem
 
 7) Do "kramerius\search\src\java\cz\incad\Kramerius\exts\menu\main\impl\adm\items" vytvořit soubor ParametrizedFedoraIterator.java s následujícím obsahem:
 
-package cz.incad.Kramerius.exts.menu.main.impl.adm.items;
+    package cz.incad.Kramerius.exts.menu.main.impl.adm.items;
 
-import java.io.IOException;
+    import java.io.IOException;
 
-import cz.incad.Kramerius.exts.menu.main.impl.AbstractMainMenuItem;
-import cz.incad.Kramerius.exts.menu.main.impl.adm.AdminMenuItem;
+    import cz.incad.Kramerius.exts.menu.main.impl.AbstractMainMenuItem;
+    import cz.incad.Kramerius.exts.menu.main.impl.adm.AdminMenuItem;
 
-public class ParametrizedFedoraIterator extends AbstractMainMenuItem implements AdminMenuItem {
+    public class ParametrizedFedoraIterator extends AbstractMainMenuItem implements AdminMenuItem {
 
     @Override
     public boolean isRenderable() {
@@ -57,7 +57,7 @@ public class ParametrizedFedoraIterator extends AbstractMainMenuItem implements 
             "javascript:noParamsProcess('fedoraiterator'); javascript:hideAdminMenu();",
             "administrator.menu.dialogs.fedoraiterator.title", false);
     }
-}
+    }
 
 8) Do "kramerius\search\src\java\cz\incad\Kramerius\exts\menu\main\guice\MainMenuConfiguration.java" přidat následující řádek:
 
@@ -99,53 +99,53 @@ V elementu PrevodNaRok se uvádí výraz, jak data, která odpovídají vzoru, p
 
 Příklad souboru Parametry.xml:
 
-<?xml version="1.0" encoding="UTF-8"?><Parametry>
-<SpusteniPovoleno>ne</SpusteniPovoleno>
-<Zpristupnovat>ne</Zpristupnovat>
-<ZmenenePred>3333-03-25-23:59:02.222</ZmenenePred>
-<LetAutori>70</LetAutori>
-<LetVydani>50</LetVydani>
-</Parametry>
+    <?xml version="1.0" encoding="UTF-8"?><Parametry>
+    <SpusteniPovoleno>ne</SpusteniPovoleno>
+    <Zpristupnovat>ne</Zpristupnovat>
+    <ZmenenePred>3333-03-25-23:59:02.222</ZmenenePred>
+    <LetAutori>70</LetAutori>
+    <LetVydani>50</LetVydani>
+    </Parametry>
 
 Příklad souboru VzoryDatumUmrti.xml:
 
-<?xml version="1.0" encoding="UTF-8"?>
-<Vzory>
-<VzorDefinice>
-<IAtributApproximate>N</IAtributApproximate>
-<Cislice>C</Cislice>
-<CisliceProVypocet>R</CisliceProVypocet>
-<Vzor>cca CC. - RR. stol.</Vzor>
-<PrevodNaRok>RR*100+150</PrevodNaRok>
-</VzorDefinice>
-<VzorDefinice>
-<IAtributApproximate>N</IAtributApproximate>
-<Cislice>C</Cislice>
-<CisliceProVypocet>R</CisliceProVypocet>
-<Vzor>asi CC. - RR. stol.</Vzor>
-<PrevodNaRok>RR*100+150</PrevodNaRok>
-</VzorDefinice>
-</Vzory>
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Vzory>
+    <VzorDefinice>
+    <IAtributApproximate>N</IAtributApproximate>
+    <Cislice>C</Cislice>
+    <CisliceProVypocet>R</CisliceProVypocet>
+    <Vzor>cca CC. - RR. stol.</Vzor>
+    <PrevodNaRok>RR*100+150</PrevodNaRok>
+    </VzorDefinice>
+    <VzorDefinice>
+    <IAtributApproximate>N</IAtributApproximate>
+    <Cislice>C</Cislice>
+    <CisliceProVypocet>R</CisliceProVypocet>
+    <Vzor>asi CC. - RR. stol.</Vzor>
+    <PrevodNaRok>RR*100+150</PrevodNaRok>
+    </VzorDefinice>
+    </Vzory>
 
 Příklad souboru VzoryRokVydani.xml:
 
-<?xml version="1.0" encoding="UTF-8"?>
-<Vzory>
-<VzorDefinice>
-<IAtributApproximate>N</IAtributApproximate>
-<Cislice>C</Cislice>
-<CisliceProVypocet>R</CisliceProVypocet>
-<Vzor>cca CC. - RR. stol.</Vzor>
-<PrevodNaRok>RR*100+150</PrevodNaRok>
-</VzorDefinice>
-<VzorDefinice>
-<IAtributApproximate>N</IAtributApproximate>
-<Cislice>C</Cislice>
-<CisliceProVypocet>R</CisliceProVypocet>
-<Vzor>asi CC. - RR. stol.</Vzor>
-<PrevodNaRok>RR*100+150</PrevodNaRok>
-</VzorDefinice>
-</Vzory>
+    <?xml version="1.0" encoding="UTF-8"?>
+    <Vzory>
+    <VzorDefinice>
+    <IAtributApproximate>N</IAtributApproximate>
+    <Cislice>C</Cislice>
+    <CisliceProVypocet>R</CisliceProVypocet>
+    <Vzor>cca CC. - RR. stol.</Vzor>
+    <PrevodNaRok>RR*100+150</PrevodNaRok>
+    </VzorDefinice>
+    <VzorDefinice>
+    <IAtributApproximate>N</IAtributApproximate>
+    <Cislice>C</Cislice>
+    <CisliceProVypocet>R</CisliceProVypocet>
+    <Vzor>asi CC. - RR. stol.</Vzor>
+    <PrevodNaRok>RR*100+150</PrevodNaRok>
+    </VzorDefinice>
+    </Vzory>
 
 ##Výstupní soubory procesu
 
@@ -169,13 +169,13 @@ V OutputYesNonstandard4.txt uvidí administrátor:
 
 Do konfiguračního souboru procesu VzoryDatumUmrti.xml (viz výše) tedy přidá toto:
 
-<VzorDefinice>
-<IAtributApproximate>ne</IAtributApproximate>
-<Cislice>C</Cislice>
-<CisliceProVypocet>R</CisliceProVypocet>
-<Vzor>činný CC. století-RR. století</Vzor>
-<PrevodNaRok>RR*100+150</PrevodNaRok>
-</VzorDefinice>
+    <VzorDefinice>
+    <IAtributApproximate>ne</IAtributApproximate>
+    <Cislice>C</Cislice>
+    <CisliceProVypocet>R</CisliceProVypocet>
+    <Vzor>činný CC. století-RR. století</Vzor>
+    <PrevodNaRok>RR*100+150</PrevodNaRok>
+    </VzorDefinice>
 
 Proces pak bude při příštím běhu informace o dílech, která vyhověla některému ze vzorů a vyšel z toho dostatečně starý rok, dávat již do výstupních souborů typu OutputYes1.txt a pokud bude proces spuštěn s parametrem, že má rovnou zpřístupňovat vyhovující díla, tak bude takováto díla také rovnou zpřístupňovat.
 
